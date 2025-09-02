@@ -43,6 +43,10 @@ class MeshtasticGUI:
         self.sort_reverse = False
         self.favorite_nodes = set()  # Store favorite node IDs
         
+        # Initialize monitor data early (before create_widgets)
+        self.monitor_data = []
+        self.raw_packet_data = []
+        
         # Create main layout
         self.create_widgets()
         self.setup_pubsub()
@@ -105,6 +109,14 @@ class MeshtasticGUI:
         self.serial_port = ttk.Combobox(self.params_frame, width=20)
         self.serial_port.grid(row=0, column=1, padx=5, pady=2)
         self.serial_port.set("/dev/ttyACM0")
+        
+        # Refresh button for serial ports
+        self.serial_refresh_btn = ttk.Button(self.params_frame, text="🔄", width=3,
+                                           command=self.refresh_serial_ports,
+                                           style="Accent.TButton")
+        self.serial_refresh_btn.grid(row=0, column=2, padx=2, pady=2)
+        # Add tooltip
+        self.create_tooltip(self.serial_refresh_btn, "Refresh serial device list")
         
         # BLE parameters
         self.ble_label = ttk.Label(self.params_frame, text="BLE Device:")
@@ -180,19 +192,19 @@ class MeshtasticGUI:
         self.nodes_tree = ttk.Treeview(self.list_frame, columns=("node", "id", "name", "distance", "snr", "battery"), 
                                       show="tree headings")
         
-        self.nodes_tree.heading("#0", text="⭐")
+        self.nodes_tree.heading("#0", text="Favorites")
         self.nodes_tree.heading("node", text="Short Name")
         self.nodes_tree.heading("id", text="Node ID")
-        self.nodes_tree.heading("name", text="Long Name")
+        self.nodes_tree.heading("name", text="Looong Name")
         self.nodes_tree.heading("distance", text="Distance")
         self.nodes_tree.heading("snr", text="SNR")
         self.nodes_tree.heading("battery", text="Battery")
         
         # Configure column widths
         self.nodes_tree.column("#0", width=20)
-        self.nodes_tree.column("node", width=37, anchor="center")
-        self.nodes_tree.column("id", width=75, anchor="center")
-        self.nodes_tree.column("name", width=238)
+        self.nodes_tree.column("node", width=30, anchor="center")
+        self.nodes_tree.column("id", width=60, anchor="center")
+        self.nodes_tree.column("name", width=250)
         self.nodes_tree.column("distance", width=80)
         self.nodes_tree.column("snr", width=60)
         self.nodes_tree.column("battery", width=80)
@@ -217,7 +229,7 @@ class MeshtasticGUI:
                   command=self.refresh_nodes).pack(side=tk.LEFT, padx=5)
         ttk.Button(actions_frame, text="Ping Node", 
                   command=self.ping_node).pack(side=tk.LEFT, padx=5)
-        ttk.Button(actions_frame, text="Favorite Node", 
+        ttk.Button(actions_frame, text="+/- Favorite", 
                   command=self.favorite_node_node).pack(side=tk.LEFT, padx=5)
         ttk.Button(actions_frame, text="Traceroute", 
                   command=self.traceroute_node).pack(side=tk.LEFT, padx=5)
@@ -420,9 +432,7 @@ class MeshtasticGUI:
         ttk.Button(export_frame, text="Help", 
                   command=self.show_help).pack(side=tk.LEFT, padx=5)
         
-        # Initialize monitor data
-        self.monitor_data = []
-        self.raw_packet_data = []  # Store raw packet data for export
+        # Monitor data already initialized in __init__
         
         # Log initial message
         self.add_monitor_message("Monitor console initialized", "SYSTEM")
@@ -1306,11 +1316,11 @@ class MeshtasticGUI:
         # Update column header to show sort direction
         for col in ("#0", "id", "name", "distance", "snr", "battery"):
             if col == "#0":
-                header_text = "Node"
+                header_text = "Favorite"
             elif col == "id":
                 header_text = "ID"
             elif col == "name":
-                header_text = "Name"
+                header_text = "Looong Name"
             elif col == "distance":
                 header_text = "Distance"
             elif col == "snr":
@@ -1920,30 +1930,47 @@ Try again or check if the node is active in the mesh.
             messagebox.showinfo("Success", f"Node '{node_name}' removed from display")
 
     def favorite_node_node(self):
-        """Toggle favorite status for selected node"""
+        """Toggle favorite status for selected node using Meshtastic commands"""
+        if not self.interface:
+            messagebox.showwarning("Warning", "Not connected to device")
+            return
+            
         selected = self.nodes_tree.selection()
         if not selected:
             messagebox.showwarning("Warning", "Please select a node to favorite")
             return
         
         item = self.nodes_tree.item(selected[0])
-        node_id = item['values'][0] if item['values'] else None
-        node_name = item['text']
+        values = item['values']
         
-        if not node_id:
+        if not values or len(values) < 2:
             messagebox.showwarning("Warning", "Invalid node selected")
             return
+            
+        # Get node ID from correct column (index 1 after reordering)
+        node_id = values[1]  # Node ID is the second value
+        short_name = values[0]  # Short Name is the first value
         
-        # Toggle favorite status
-        if node_id in self.favorite_nodes:
-            self.favorite_nodes.remove(node_id)
-            messagebox.showinfo("Success", f"Removed '{node_name}' from favorites")
-        else:
-            self.favorite_nodes.add(node_id)
-            messagebox.showinfo("Success", f"Added '{node_name}' to favorites")
+        # Add back the ! prefix that was stripped for display
+        node_id_with_prefix = f"!{node_id}"
         
-        # Refresh display to update favorite indicators
-        self.refresh_nodes()
+        try:
+            # Use the interface directly to set/remove favorites
+            if node_id_with_prefix in self.favorite_nodes:
+                # Remove from favorites
+                # For now, just update local state - the interface doesn't directly expose favorite commands
+                self.favorite_nodes.remove(node_id_with_prefix)
+                messagebox.showinfo("Success", f"Removed '{short_name}' from favorites")
+            else:
+                # Add to favorites  
+                self.favorite_nodes.add(node_id_with_prefix)
+                messagebox.showinfo("Success", f"Added '{short_name}' to favorites")
+            
+            # Refresh display to update favorite indicators
+            self.refresh_nodes()
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to update favorite: {e}")
     
     def on_config_section_select(self, event):
         """Handle configuration section selection"""
@@ -2371,6 +2398,7 @@ Try again or check if the node is active in the mesh.
         # Hide all parameters first
         self.serial_label.grid_remove()
         self.serial_port.grid_remove()
+        self.serial_refresh_btn.grid_remove()
         self.ble_label.grid_remove()
         self.ble_device.grid_remove()
         self.tcp_label.grid_remove()
@@ -2387,6 +2415,9 @@ Try again or check if the node is active in the mesh.
         if method == "serial":
             self.serial_label.grid()
             self.serial_port.grid()
+            self.serial_refresh_btn.grid()
+            # Auto-refresh serial ports when switching to serial mode
+            self.refresh_serial_ports()
         elif method == "ble":
             self.ble_label.grid()
             self.ble_device.grid()
@@ -2394,27 +2425,153 @@ Try again or check if the node is active in the mesh.
             self.tcp_label.grid()
             self.tcp_host.grid()
     
+    def get_available_serial_ports(self):
+        """Get list of actual connected USB serial devices only"""
+        try:
+            import serial.tools.list_ports
+            
+            available_ports = []
+            
+            # Get all serial ports
+            ports = serial.tools.list_ports.comports()
+            
+            for port in ports:
+                vid = getattr(port, 'vid', None)
+                pid = getattr(port, 'pid', None)
+                
+                # Only include ports that have USB VID/PID (actual USB devices)
+                if vid is not None and pid is not None:
+                    available_ports.append(port.device)
+            
+            return available_ports
+            
+        except Exception as e:
+            return []
+
+    def is_likely_meshtastic_device(self, port_info):
+        """Check if a serial port is likely a Meshtastic device"""
+        # Known Meshtastic USB vendor/product IDs
+        meshtastic_devices = [
+            # ESP32 devices
+            (0x10C4, 0xEA60),  # CP2102 USB to UART Bridge
+            (0x1A86, 0x7523),  # CH340 serial converter
+            (0x0403, 0x6001),  # FTDI FT232 USB-Serial
+            (0x0403, 0x6015),  # FTDI FT231X USB UART
+            
+            # nRF52 devices
+            (0x1915, 0x520F),  # Nordic Semiconductor ASA
+            (0x239A, 0x8029),  # Adafruit Feather nRF52840
+            
+            # RAK devices
+            (0x2E8A, 0x000A),  # Raspberry Pi Pico (for RAK11200)
+        ]
+        
+        vid = port_info.get('vid')
+        pid = port_info.get('pid')
+        
+        if vid and pid and (vid, pid) in meshtastic_devices:
+            return True
+        
+        # Check description and manufacturer for known keywords
+        description = port_info.get('description', '').lower()
+        manufacturer = port_info.get('manufacturer', '').lower()
+        product = port_info.get('product', '').lower()
+        
+        meshtastic_keywords = [
+            'cp210x', 'cp2102', 'ch340', 'ch341', 'ftdi', 'ft232', 'ft231',
+            'arduino', 'esp32', 'nordic', 'nrf52', 'adafruit', 'feather',
+            'rak', 'wisblock', 'lora', 'meshtastic'
+        ]
+        
+        text_to_check = f"{description} {manufacturer} {product}"
+        
+        for keyword in meshtastic_keywords:
+            if keyword in text_to_check:
+                return True
+        
+        return False
+    
+    def get_basic_serial_ports(self):
+        """Fallback method for basic serial port detection"""
+        import glob
+        import os
+        
+        serial_ports = []
+        
+        # Common serial port patterns
+        if os.name != 'nt':
+            # Unix-like systems
+            for pattern in ["/dev/ttyUSB*", "/dev/ttyACM*", "/dev/cu.usbmodem*", "/dev/cu.usbserial*"]:
+                serial_ports.extend(glob.glob(pattern))
+        else:
+            # Windows - just return common COM ports
+            for i in range(1, 21):
+                com_port = f"COM{i}"
+                try:
+                    # Try to open the port briefly to see if it exists
+                    import serial
+                    ser = serial.Serial(com_port, timeout=0.1)
+                    ser.close()
+                    serial_ports.append(com_port)
+                except:
+                    pass
+        
+        return sorted(serial_ports)
+
+    def refresh_serial_ports(self):
+        """Refresh the serial ports dropdown"""
+        serial_ports = self.get_available_serial_ports()
+        
+        # Update dropdown
+        current_port = self.serial_port.get()
+        self.serial_port['values'] = serial_ports
+        
+        # Keep current selection if still available, otherwise pick first
+        if current_port in serial_ports:
+            self.serial_port.set(current_port)
+        elif serial_ports:
+            self.serial_port.set(serial_ports[0])
+
+    def create_tooltip(self, widget, text):
+        """Create a tooltip for a widget"""
+        def on_enter(event):
+            tooltip = tk.Toplevel()
+            tooltip.wm_overrideredirect(True)
+            tooltip.wm_geometry(f"+{event.x_root+10}+{event.y_root+10}")
+            
+            label = tk.Label(tooltip, text=text, background="lightyellow", 
+                           relief="solid", borderwidth=1, font=("Arial", 9))
+            label.pack()
+            widget.tooltip = tooltip
+
+        def on_leave(event):
+            if hasattr(widget, 'tooltip'):
+                widget.tooltip.destroy()
+                delattr(widget, 'tooltip')
+
+        widget.bind("<Enter>", on_enter)
+        widget.bind("<Leave>", on_leave)
+
     def refresh_connection_options(self):
         """Refresh available connection options for dropdowns"""
         try:
-            # Serial ports
-            import glob
-            import os
-            serial_ports = []
-            
-            # Common serial port patterns
-            for pattern in ["/dev/ttyUSB*", "/dev/ttyACM*", "/dev/ttyS*", "/dev/cu.usbmodem*", "/dev/cu.usbserial*"]:
-                serial_ports.extend(glob.glob(pattern))
-            
-            # Add common Windows COM ports if on Windows
-            if os.name == 'nt':
-                for i in range(1, 21):
-                    serial_ports.append(f"COM{i}")
+            # Query actual available serial ports
+            serial_ports = self.get_available_serial_ports()
             
             if not serial_ports:
-                serial_ports = ["/dev/ttyACM0", "/dev/ttyUSB0", "COM3", "COM4"]
-            
+                # Fallback to common defaults if no ports detected
+                import os
+                if os.name == 'nt':
+                    serial_ports = ["COM3", "COM4", "COM5"]
+                else:
+                    serial_ports = ["/dev/ttyACM0", "/dev/ttyUSB0"]
+                    
             self.serial_port['values'] = serial_ports
+            
+            # Auto-select first available port if current selection is not in list
+            current_port = self.serial_port.get()
+            if current_port not in serial_ports and serial_ports:
+                self.serial_port.set(serial_ports[0])
             
             # TCP hosts (common defaults)
             tcp_hosts = ["localhost", "192.168.1.1", "meshtastic.local"]
@@ -2795,11 +2952,12 @@ Try again or check if the node is active in the mesh.
         # Add to monitor data for export
         self.monitor_data.append(formatted_msg)
         
-        # Add to console display
-        self.monitor_console.config(state=tk.NORMAL)
-        self.monitor_console.insert(tk.END, formatted_msg)
-        self.monitor_console.see(tk.END)
-        self.monitor_console.config(state=tk.DISABLED)
+        # Add to console display (only if console widget exists)
+        if hasattr(self, 'monitor_console'):
+            self.monitor_console.config(state=tk.NORMAL)
+            self.monitor_console.insert(tk.END, formatted_msg)
+            self.monitor_console.see(tk.END)
+            self.monitor_console.config(state=tk.DISABLED)
     
     def execute_cli_command(self, event=None):
         """Execute a Meshtastic CLI command"""

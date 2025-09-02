@@ -24,30 +24,106 @@ Meshtastic GUI provides an intuitive desktop application for interacting with Me
 
 ### Prerequisites
 
-First, install the Meshtastic CLI library:
+- **Python 3.8 or higher** - Download from [python.org](https://python.org)
+- **Git** (optional) - For cloning the repository
 
+### Quick Start
+
+#### Option 1: Automated Installation (Recommended)
+
+The easiest way to install Meshtastic GUI is using the provided installation scripts that set up a Python virtual environment:
+
+**Linux/macOS:**
 ```bash
-pip install meshtastic
+# Download/clone the repository
+git clone <repository-url>
+cd meshtastic-gui
+
+# Run the installation script
+chmod +x install.sh
+./install.sh
+
+# Launch the GUI
+./run.sh
 ```
 
-### Install Meshtastic GUI
+**Windows:**
+```cmd
+REM Download/clone the repository
+git clone <repository-url>
+cd meshtastic-gui
+
+REM Run the installation script
+install.bat
+
+REM Launch the GUI  
+run.bat
+```
+
+#### Option 2: Manual Installation
+
+If you want more control over the installation process:
 
 ```bash
-pip install meshtastic-gui
+# 1. Create virtual environment
+python3 -m venv venv
+
+# 2. Activate virtual environment
+# Linux/macOS:
+source venv/bin/activate
+# Windows:
+venv\Scripts\activate
+
+# 3. Upgrade pip
+python -m pip install --upgrade pip
+
+# 4. Install dependencies
+pip install -r requirements.txt
+
+# 5. Install GUI in development mode
+pip install -e .
+
+# 6. Launch GUI
+meshtastic-gui
 ```
+
+### What the Installation Does
+
+The installation process:
+
+1. **Creates a virtual environment** in the `venv/` directory
+2. **Installs Python dependencies**:
+   - `meshtastic` - The core Meshtastic Python library
+   - `pypubsub` - For event handling
+3. **Installs the GUI application** in development mode
+4. **Creates launcher scripts** for easy execution
+
+### Virtual Environment Benefits
+
+Using a virtual environment provides:
+
+- **Isolation** - Prevents conflicts with other Python packages
+- **Reproducibility** - Ensures consistent dependency versions
+- **Cleanliness** - Keeps your system Python installation clean
+- **Easy removal** - Just delete the `venv/` folder to uninstall
 
 ## Usage
 
-### Launch the GUI
+### Daily Usage
 
-After installation, you can launch the GUI in several ways:
+After initial installation, you can launch the GUI using:
 
 ```bash
-# Command line
-meshtastic-gui
+# Quick launch (Linux/macOS)
+./run.sh
 
-# Or as a Python module
-python -m meshtastic_gui
+# Quick launch (Windows)  
+run.bat
+
+# Or manually activate environment first
+source venv/bin/activate  # Linux/macOS
+venv\Scripts\activate     # Windows
+meshtastic-gui
 ```
 
 ### Getting Started
@@ -93,14 +169,79 @@ Supports all connection methods:
 - WiFi (TCP)
 - Bluetooth Low Energy
 
-## Development
+## Troubleshooting
 
-To set up for development:
+### Python Not Found
+```bash
+# Make sure Python 3.8+ is installed
+python3 --version
+```
+
+### Permission Issues (Linux/macOS)
+```bash
+# Make scripts executable
+chmod +x install.sh run.sh
+```
+
+### Virtual Environment Issues
+```bash
+# Remove and recreate virtual environment
+rm -rf venv
+python3 -m venv venv
+```
+
+### Import Errors
+The GUI depends on the `meshtastic` library. If you get import errors:
+
+1. Make sure the virtual environment is activated
+2. Reinstall dependencies: `pip install -r requirements.txt`
+3. Check that the meshtastic library installed correctly: `pip list | grep meshtastic`
+
+### GUI Won't Start
+1. Check that you're in the virtual environment
+2. Verify installation: `which meshtastic-gui` (should show path in venv)
+3. Run test script: `python test_install.py`
+
+## Uninstalling
+
+To completely remove the GUI:
 
 ```bash
-git clone https://github.com/meshtastic/gui.git
-cd gui
+# Remove virtual environment
+rm -rf venv
+
+# Remove generated files
+rm -f activate.sh activate.bat
+
+# The source code and scripts remain for future use
+```
+
+## Development
+
+For development work:
+
+```bash
+# Clone the repository
+git clone <repository-url>
+cd meshtastic-gui
+
+# Set up virtual environment using install script
+./install.sh  # Linux/macOS
+# or
+install.bat   # Windows
+
+# Install development dependencies
+source venv/bin/activate  # Linux/macOS
+# or
+venv\Scripts\activate     # Windows
+
 pip install -e .[dev]
+
+# Run tests
+python test_install.py
+
+# Make changes to src/meshtastic_gui/gui.py
+# Changes are immediately available without reinstalling
 ```
 
 ## Contributing

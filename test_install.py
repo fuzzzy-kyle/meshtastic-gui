@@ -68,10 +68,15 @@ if __name__ == "__main__":
     
     if deps_ok and import_ok:
         print("✓ All tests passed! The GUI should work correctly.")
-        print("\nTo install and run:")
-        print("1. Install dependencies: pip install meshtastic pypubsub")
-        print("2. Install GUI: pip install -e .")
-        print("3. Run GUI: meshtastic-gui")
+        print("\nRecommended installation (with virtual environment):")
+        print("Linux/macOS: ./install.sh")
+        print("Windows: install.bat")
+        print("\nManual installation:")
+        print("1. Create virtual environment: python3 -m venv venv")
+        print("2. Activate: source venv/bin/activate (Linux/macOS) or venv\\Scripts\\activate (Windows)")
+        print("3. Install dependencies: pip install -r requirements.txt")
+        print("4. Install GUI: pip install -e .")
+        print("5. Run GUI: meshtastic-gui")
     else:
         print("✗ Some tests failed. Please check the errors above.")
         sys.exit(1)

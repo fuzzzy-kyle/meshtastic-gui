@@ -58,6 +58,10 @@ ENV/
 env.bak/
 venv.bak/
 
+# Installation scripts generated files
+activate.sh
+activate.bat
+
 # IDE
 .vscode/
 .idea/
@@ -77,3 +81,9 @@ Thumbs.db
 # Project specific
 *.log
 config.json
+
+# Claude Code related
+CLAUDE.md
+CLAUDETODO.md
+claude_*
+*claude*
