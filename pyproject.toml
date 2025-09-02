@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "meshtastic-gui"
+version = "1.0.0"
+description = "A tkinter-based GUI for Meshtastic devices"
+readme = "README.md"
+license = {text = "GPL-3.0"}
+authors = [
+    {name = "Meshtastic Community"}
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Communications :: Ham Radio",
+    "Topic :: System :: Networking",
+]
+keywords = ["meshtastic", "gui", "lora", "mesh", "radio", "communication"]
+requires-python = ">=3.8"
+dependencies = [
+    "meshtastic>=2.0.0",
+    "pypubsub>=4.0.3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "black",
+    "isort",
+    "mypy",
+]
+
+[project.urls]
+Homepage = "https://github.com/meshtastic/gui"
+Repository = "https://github.com/meshtastic/gui"
+Issues = "https://github.com/meshtastic/gui/issues"
+
+[project.scripts]
+meshtastic-gui = "meshtastic_gui:main"
+
+[project.gui-scripts]
+meshtastic-gui = "meshtastic_gui:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "src"
