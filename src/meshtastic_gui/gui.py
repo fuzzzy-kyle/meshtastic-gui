@@ -229,7 +229,7 @@ class MeshtasticGUI:
                   command=self.refresh_nodes).pack(side=tk.LEFT, padx=5)
         ttk.Button(actions_frame, text="Ping Node", 
                   command=self.ping_node).pack(side=tk.LEFT, padx=5)
-        ttk.Button(actions_frame, text="+/- Favorite", 
+        ttk.Button(actions_frame, text="Add/Remove Favorite", 
                   command=self.favorite_node_node).pack(side=tk.LEFT, padx=5)
         ttk.Button(actions_frame, text="Traceroute", 
                   command=self.traceroute_node).pack(side=tk.LEFT, padx=5)
@@ -399,7 +399,7 @@ class MeshtasticGUI:
             wrap=tk.WORD,
             bg='black',
             fg='green',
-            font=('Courier', 14)
+            font=('Courier', 12)
         )
         self.monitor_console.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
         
