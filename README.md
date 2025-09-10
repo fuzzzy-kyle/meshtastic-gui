@@ -20,6 +20,28 @@ Meshtastic GUI provides an intuitive desktop application for interacting with Me
 - **Monitoring**: Real-time packet monitoring and logging
 - **Data Export**: Export conversations, node data, and packet logs
 
+## Screenshots
+
+<img src="img/1.png" alt="Main Interface" width="800">
+
+*Main interface showing the device connection and mesh network overview*
+
+<img src="img/2.png" alt="Mesh Nodes View" width="800">
+
+*Mesh nodes tab displaying all discovered nodes in the network*
+
+<img src="img/3.png" alt="Messaging Interface" width="800">
+
+*Messaging interface for sending and receiving text messages*
+
+<img src="img/4.png" alt="Monitor Tab" width="800">
+
+*Monitor tab showing real-time packet data and activity*
+
+<img src="img/5.png" alt="Configuration Panel" width="800">
+
+*Configuration panel for device and channel management*
+
 ## Installation
 
 ### Prerequisites
